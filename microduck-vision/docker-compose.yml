@@ -1,0 +1,35 @@
+# microduck-vision 运行时
+#
+#   docker compose -f microduck-vision/docker-compose.yml up -d --build
+#   → http://localhost:63317
+#
+# 首次 build 只多装 libosmesa6 + git（秒级），基础层复用本地已有的
+# srayuth089/microduck-docker:latest，不会重新下载 648 MB。
+
+name: microduck-vision
+
+services:
+  duck:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: microduck-vision:local
+    container_name: microduck
+    ports:
+      # 只绑回环：lab API 能删训练记录，不要暴露到局域网（要远程看走 SSH 隧道）
+      - "127.0.0.1:63317:63317"   # 3D viewer
+      - "127.0.0.1:8788:8788"     # 物理 + 大脑，缺它页面连不上
+    volumes:
+      - ./:/data/vision           # 宿主代码（git 在宿主）→ 容器，零侵入
+      - microduck-data:/data      # 训练/采集产物，复用现有卷
+    environment:
+      # 空格分隔；容器内 `ls /app/policies` 可看全部 10 个
+      DUCKS: "BEST_alpha_walking BEST_alpha_stand"
+    restart: unless-stopped
+    stop_grace_period: 20s      # 上游要求：让训练/录制收尾
+
+volumes:
+  microduck-data:
+    # 显式钉住名字，否则 compose 会建 microduck-vision_microduck-data，
+    # 现有容器里训练好的东西就"看不见"了
+    name: microduck-data

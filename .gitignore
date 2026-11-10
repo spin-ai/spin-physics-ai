@@ -1,0 +1,27 @@
+# ── 第三方仓库：本仓库不存档，用 ./scripts/fetch.py 按固定 commit 复原 ──
+/robots/
+/benchmarks/LIBERO-plus/
+
+# ── 大文件与产物（可重新下载 / 可再生）──
+/data/
+*.zip
+*.tgz
+*.onnx
+runs/
+captures/
+reports/*.png
+reports/*.gif
+reports/*.mp4
+
+# ── Python / Node ──
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+node_modules/
+.next/
+
+# ── 系统 ──
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,9 @@
+data/
+captures/
+reports/*.png
+reports/*.gif
+reports/*.mp4
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

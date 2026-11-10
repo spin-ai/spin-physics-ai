@@ -1,0 +1,9 @@
+# 构建上下文只用来读 Dockerfile；代码是运行时挂载进来的，别塞进 build context
+data/
+captures/
+reports/
+.git/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
