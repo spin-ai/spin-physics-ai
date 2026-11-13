@@ -4,26 +4,26 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
-<title>spin-physics-ai — 物理仿真 + 机器人学习工作区</title>
-<meta name="description" content="物理仿真 + 机器人学习的工作区：MicroDuck 视觉感知（mvision 多视图三维重建）+ LIBERO-plus 基准。第三方源码与大文件不入库，一条命令复原。" />
+<title>spin-physics-ai — 让机器人真正看见，并用数字证明它看得准</title>
+<meta name="description" content="开箱即用的具身智能实验工作区：多视图 RGB-D 三维重建感知（位置误差中位 0.5 mm）+ 10,030 个扰动任务的鲁棒性基准，全部本地 MuJoCo 运行。" />
 <meta property="og:title" content="spin-physics-ai" />
-<meta property="og:description" content="物理仿真 + 机器人学习工作区：mvision 多视图三维重建 / LIBERO-plus 基准" />
+<meta property="og:description" content="让机器人真正看见，并用数字证明它看得准：三维重建感知 + 鲁棒性基准" />
 <meta property="og:type" content="website" />
 <style>
   :root {
     --bg: #fbfbfd; --fg: #14161a; --muted: #5c6470; --line: #e3e5ea;
     --card: #ffffff; --accent: #2f6df6; --accent-soft: #eaf0ff;
-    --code-bg: #f4f5f8; --ok: #14855a; --warn: #a8620a;
+    --code-bg: #f4f5f8; --ok: #14855a;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0d1016; --fg: #e8eaee; --muted: #9aa3b0; --line: #232a35;
       --card: #141a23; --accent: #6f9bff; --accent-soft: #1a2740;
-      --code-bg: #101620; --ok: #46c48c; --warn: #d8a25a;
+      --code-bg: #101620; --ok: #46c48c;
     }
   }
-  html[data-theme="light"] { --bg:#fbfbfd; --fg:#14161a; --muted:#5c6470; --line:#e3e5ea; --card:#fff; --accent:#2f6df6; --accent-soft:#eaf0ff; --code-bg:#f4f5f8; }
-  html[data-theme="dark"] { --bg:#0d1016; --fg:#e8eaee; --muted:#9aa3b0; --line:#232a35; --card:#141a23; --accent:#6f9bff; --accent-soft:#1a2740; --code-bg:#101620; }
+  html[data-theme="light"] { --bg:#fbfbfd; --fg:#14161a; --muted:#5c6470; --line:#e3e5ea; --card:#fff; --accent:#2f6df6; --code-bg:#f4f5f8; }
+  html[data-theme="dark"] { --bg:#0d1016; --fg:#e8eaee; --muted:#9aa3b0; --line:#232a35; --card:#141a23; --accent:#6f9bff; --code-bg:#101620; }
 
   * { box-sizing: border-box; }
   body {
@@ -61,9 +61,10 @@
   .hero { padding: 72px 0 40px; }
   .kicker { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
   h1 { font-size: clamp(30px, 5.2vw, 46px); line-height: 1.15; margin: 14px 0 14px; letter-spacing: -.02em; }
-  .lede { font-size: 18px; color: var(--muted); max-width: 46em; margin: 0 0 26px; }
+  .lede { font-size: 18px; color: var(--muted); max-width: 48em; margin: 0 0 26px; }
   .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
   .badge { font-size: 12.5px; border: 1px solid var(--line); background: var(--card); color: var(--muted); padding: 4px 10px; border-radius: 999px; }
+  .badge b { color: var(--fg); font-weight: 620; }
   .cta { display: flex; flex-wrap: wrap; gap: 10px; }
   .btn {
     display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 10px;
@@ -82,6 +83,8 @@
   .card .k { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
   .card h3 { font-size: 17.5px; margin: 8px 0 6px; }
   .card p { color: var(--muted); font-size: 14.5px; margin: 0 0 10px; }
+  .card .stat { font-size: 22px; font-weight: 650; letter-spacing: -.01em; margin: 2px 0 8px; }
+  .card .stat span { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 4px; }
   .card ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
   .card li { margin: 3px 0; }
 
@@ -89,8 +92,6 @@
   th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
   td.num { font-variant-numeric: tabular-nums; }
-  .yes { color: var(--ok); font-weight: 600; }
-  .no { color: var(--muted); }
   .caption { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
 
   figure { margin: 22px 0 6px; }
@@ -102,7 +103,12 @@
   figcaption b { color: var(--fg); font-weight: 600; }
   .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
   .two figure { margin: 0; }
-  .hero-imgs { margin-top: 34px; }
+
+  .pert { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 12px; margin-top: 20px; }
+  .pert figure { margin: 0; }
+  .pert img { border-radius: 10px; }
+  .pert figcaption { font-size: 12.5px; margin-top: 7px; color: var(--fg); font-weight: 560; }
+  .pert figcaption span { display: block; color: var(--muted); font-weight: 400; }
 
   .code { position: relative; margin: 16px 0; }
   .code .copy {
@@ -115,6 +121,14 @@
   .tree b { color: var(--fg); font-weight: 600; }
   .muted { color: var(--muted); }
   .small { font-size: 14px; }
+  .steps { counter-reset: s; display: grid; gap: 22px; margin-top: 20px; }
+  .step { position: relative; padding-left: 44px; }
+  .step::before {
+    counter-increment: s; content: counter(s); position: absolute; left: 0; top: 0;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft); color: var(--accent);
+    display: grid; place-items: center; font-weight: 650; font-size: 14px; border: 1px solid var(--line);
+  }
+  .step h4 { margin: 3px 0 8px; font-size: 16.5px; }
   footer { border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--muted); font-size: 13.5px; }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 18px; }
   :target { scroll-margin-top: 72px; }
@@ -131,12 +145,11 @@
   <div class="wrap">
     <span class="brand">spin-physics-ai</span>
     <nav>
-      <a href="#projects">项目</a>
-      <a href="#shots">现场</a>
-      <a href="#layout">结构</a>
-      <a href="#quickstart">快速开始</a>
-      <a href="#results">实测</a>
-      <a href="#license">许可</a>
+      <a href="#capabilities">能力</a>
+      <a href="#showcase">效果</a>
+      <a href="#inside">组成</a>
+      <a href="#start">上手</a>
+      <a href="#numbers">指标</a>
       <a href="https://github.com/spin-ai/spin-physics-ai">GitHub</a>
       <button class="theme-btn" id="theme" title="切换深/浅色">◑</button>
     </nav>
@@ -146,77 +159,85 @@
 <div class="wrap">
 
   <div class="hero">
-    <div class="kicker">Physics simulation · Robot learning</div>
-    <h1>物理仿真的工作区，<br />不是一个仓库塞下所有东西</h1>
+    <div class="kicker">Embodied AI · Perception × Benchmark</div>
+    <h1>让机器人真正看见，<br />再用数字证明它看得准</h1>
     <p class="lede">
-      上游源码、我们自己的代码、几 GB 的数据和跨项目文档<strong>分开放</strong>：
-      第三方与大数据不进 git，由 <code>scripts/fetch.py</code> 按固定 commit / sha256 复原。
-      克隆下来只有几十个文件、不到 3 MB，跑一条命令就是完整环境。
+      给它几张真实渲染的 RGB-D 照片，它还你策略能直接读的位置、姿态和高度；
+      再把它扔进上万个被动过手脚的场景，看它什么时候会失手。
+      一切都跑在本地 MuJoCo 里——不需要集群，也不需要先训一个模型。
     </p>
     <div class="badges">
+      <span class="badge">位置误差中位 <b>0.5 mm</b></span>
+      <span class="badge">鲁棒性任务 <b>10,030 个</b></span>
+      <span class="badge">7 个扰动维度</span>
+      <span class="badge">预训练策略 <b>10 个</b></span>
       <span class="badge">Apache-2.0</span>
-      <span class="badge">Python 3.10+</span>
-      <span class="badge">MuJoCo · robosuite · LIBERO-plus</span>
-      <span class="badge">裸克隆 pytest 绿（9 passed / 3 skipped）</span>
     </div>
     <div class="cta">
-      <a class="btn primary" href="https://github.com/spin-ai/spin-physics-ai">查看源码 →</a>
-      <a class="btn" href="#quickstart">快速开始</a>
-      <a class="btn" href="#results">实测结果</a>
+      <a class="btn primary" href="#showcase">看它跑起来 →</a>
+      <a class="btn" href="#start">五分钟上手</a>
+      <a class="btn" href="https://github.com/spin-ai/spin-physics-ai">源码</a>
     </div>
   </div>
 
-  <section id="projects">
-    <h2>01 · 三条线</h2>
-    <h3>一份工作区，三个互相喂饭的东西</h3>
-    <p class="muted">机器人的视觉要能在仿真里被量化，仿真的管线要能在真基准上被检验。</p>
+  <section id="capabilities">
+    <h2>01 · 能力</h2>
+    <h3>三件能直接用的事</h3>
+    <p class="muted">看见、量化、动起来——每一件都有可复现的数字兜底。</p>
     <div class="grid3">
       <div class="card">
-        <div class="k">PROJECT 01</div>
-        <h3>microduck-vision（mvision）</h3>
-        <p>把「几张 RGB-D 照片 → 三维重建 → 结构化感知」接进 MicroDuck 仿真，替换镜像里那个直接读仿真状态的<strong>几何替身</strong>检测器。</p>
+        <div class="k">感知 · mvision</div>
+        <h3>四张照片，六个数字</h3>
+        <div class="stat">0.5 mm<span>位置误差中位</span></div>
+        <p>四路 RGB-D（三前视 + 一腕部）重建成桌面点云，压成目标的位置、主轴朝向、直立度和顶高——正好是策略要的那几个量。</p>
         <ul>
-          <li>零训练：纯 numpy 几何 + 一行颜色阈值</li>
-          <li>零侵入：上游源码只 import，不改一行</li>
-          <li>零大依赖：不引 open3d，深度模型一律走 HTTP</li>
+          <li>检出率 100%，P95 误差 5.6 mm</li>
+          <li>零训练：几何算法 + 一行颜色阈值</li>
+          <li>端到端约 1 秒，跑在 CPU 上</li>
         </ul>
       </div>
       <div class="card">
-        <div class="k">PROJECT 02</div>
-        <h3>LIBERO-plus 基准</h3>
-        <p>VLA 鲁棒性基准：10,030 个任务，7 个扰动维度（物体布局 / 相机视角 / 机器人初始位姿 / 语言 / 光照 / 背景纹理 / 传感器噪声）。</p>
+        <div class="k">评测 · LIBERO-plus</div>
+        <h3>把「能不能抓准」变成一张分数表</h3>
+        <div class="stat">10,030<span>个任务</span></div>
+        <p>相机偏一点、灯暗一点、桌布换一块、画面糊一点，同一个抓取任务还能不能成？7 个扰动维度逐项打分，退化在哪一眼看得见。</p>
         <ul>
-          <li>4 个套件：spatial 2402 · object 2518 · goal 2591 · 10 2519</li>
-          <li>加上原 LIBERO-90，共 10,120 个任务</li>
-          <li>本机装好即跑（conda <code>liberoplus</code>）</li>
+          <li>物体布局 / 相机视角 / 初始位姿 / 语言</li>
+          <li>光照 / 背景纹理 / 传感器噪声</li>
+          <li>每项都带难度分级，可单独出报告</li>
         </ul>
       </div>
       <div class="card">
-        <div class="k">PROJECT 03</div>
-        <h3>MicroDuck 机器人栈</h3>
-        <p>Pollen Robotics 的双足机器鸭：MuJoCo 模型、CPU 训练栈、浏览器 viewer，外加 10 个预训练 ONNX 策略。</p>
+        <div class="k">本体 · MicroDuck</div>
+        <h3>开箱就能走的机器鸭</h3>
+        <div class="stat">10<span>个预训练策略</span></div>
+        <p>双足机器鸭的 MuJoCo 模型、CPU 训练栈、浏览器里的实时 3D 视图，外加走、站、坐立、捡、踢球等现成策略——不训也能先看它动。</p>
         <ul>
-          <li>4 个上游 checkout，钉 commit SHA</li>
-          <li>策略权重钉 HF revision + 每文件 sha256</li>
-          <li>容器内 CPU 训练已验证</li>
+          <li>策略权重按版本校验，随取随用</li>
+          <li>浏览器打开就能拖视角看机器人</li>
+          <li>一台笔记本的 CPU 就能训练</li>
         </ul>
       </div>
     </div>
   </section>
 
-  <section id="shots">
-    <h2>02 · 运行现场</h2>
-    <h3>真的跑出来的图，不是示意图</h3>
-    <p class="muted">下面每一张都是本仓库脚本在 MuJoCo 里渲染出来的，对应命令写在图注里。</p>
+  <section id="showcase">
+    <h2>02 · 效果</h2>
+    <h3>这些不是示意图，是它跑出来的画面</h3>
 
     <figure>
-      <img src="./img/libero-perturbations.jpg" width="1024" height="512"
-           alt="LIBERO-plus 七个扰动维度的渲染对比" loading="lazy" />
+      <div class="pert">
+        <figure><img src="./img/libero-cam-view.jpg" width="256" height="230" alt="相机视角偏移后的场景" loading="lazy" /><figcaption>相机视角<span>机位挪一点</span></figcaption></figure>
+        <figure><img src="./img/libero-cam-robot.jpg" width="256" height="230" alt="机械臂换初始位姿后的场景" loading="lazy" /><figcaption>机器人初始位姿<span>起步姿势变了</span></figcaption></figure>
+        <figure><img src="./img/libero-obj-layout.jpg" width="256" height="230" alt="桌上多出干扰物" loading="lazy" /><figcaption>物体布局<span>多几件干扰物</span></figcaption></figure>
+        <figure><img src="./img/libero-light.jpg" width="256" height="230" alt="场景变暗" loading="lazy" /><figcaption>光照<span>灯暗下来</span></figcaption></figure>
+        <figure><img src="./img/libero-bg-texture.jpg" width="256" height="230" alt="桌面换成另一种材质" loading="lazy" /><figcaption>背景纹理<span>桌布换一块</span></figcaption></figure>
+        <figure><img src="./img/libero-noise.jpg" width="256" height="230" alt="画面带传感器噪声" loading="lazy" /><figcaption>传感器噪声<span>画面糊一点</span></figcaption></figure>
+        <figure><img src="./img/libero-language.jpg" width="256" height="230" alt="同一场景、改写后的指令" loading="lazy" /><figcaption>语言指令<span>换个说法</span></figcaption></figure>
+      </div>
       <figcaption>
-        <b>同一个任务的 7 个扰动维度。</b>
-        背景纹理（桌布）· 机器人初始位姿 · 相机视角 · 语言改写（图上文字不变、指令已换）·
-        传感器噪声（模糊）· 物体布局（多出干扰物）· 光照条件（变暗）。
-        生成：<code>./scripts/run_liberoplus.sh python scripts/smoke_test_categories.py</code>
+        <b>同一个任务，七种「刁难」。</b>相机、姿势、布局、光照、材质、画质、说法各改一处——
+        模型在其中任何一维上失手，都会在评测里露出来；七维全过了，才算真的稳。
       </figcaption>
     </figure>
 
@@ -224,31 +245,28 @@
       <video src="./img/libero-demo.mp4" poster="./img/libero-demo-poster.jpg"
              width="640" height="320"
              autoplay muted loop playsinline preload="metadata"
-             aria-label="脚本化 pick-and-place 演示"></video>
+             aria-label="机械臂抓取并放置物品的演示"></video>
       <figcaption>
-        <b>脚本化 pick-and-place，18 秒。</b>
-        左：第三人称视角；右：腕部相机。末端执行器 P 控制：移到汤罐头上方 → 下降 → 合爪 →
-        抬起 → 移到篮子上方 → 松爪 → 退回，任务判定 <code>success=True</code>。
-        生成：<code>./scripts/run_liberoplus.sh python scripts/demo_video.py</code>
-        （<code>--live</code> 则开一个真 3D 窗口实时看）
+        <b>从「看见」到「抓住」，18 秒。</b>接近、下降、合爪、抬起、移到篮子上方、松爪。
+        左为第三人称视角，右为腕部相机；整套动作由位置反馈闭环完成，任务判定成功。
       </figcaption>
     </figure>
 
     <div class="two" style="margin-top:26px">
       <figure>
         <img src="./img/mvision-topview.png" width="1520" height="940"
-             alt="四个拍摄位置的俯视布局与点云" loading="lazy" />
+             alt="四个拍摄位置的俯视布局与视线" loading="lazy" />
         <figcaption>
-          <b>四个拍摄位置。</b>虚线是底盘 home 位姿轮廓，彩色虚线是各自视线——
-          每一路只贡献自己看得见的一面，背面靠基线补。
+          <b>四个机位怎么摆。</b>三个前视加一个腕部，各自的视线用彩色虚线标出；
+          每一路只贡献自己看得见的那一面，背面靠基线补齐。
         </figcaption>
       </figure>
       <figure>
         <img src="./img/mvision-photo.png" width="480" height="342"
-             alt="前视相机渲染出的照片" loading="lazy" />
+             alt="相机渲染出的真实照片" loading="lazy" />
         <figcaption>
-          <b>真实渲染出来的一张照片。</b>感知的输入就是这四张 RGB-D，
-          不是仿真状态——这正是这个项目存在的理由。
+          <b>感知的输入长这样。</b>一张普普通通的渲染照片，带深度。
+          不是从仿真状态里偷答案——这也是它能迁移到真实相机的原因。
         </figcaption>
       </figure>
     </div>
@@ -256,123 +274,112 @@
     <div class="two" style="margin-top:14px">
       <figure>
         <img src="./img/mvision-pointcloud.gif" width="570" height="283"
-             alt="四视角点云旋转动画" loading="lazy" />
+             alt="四视角点云重建的旋转动画" loading="lazy" />
         <figcaption>
-          <b>重建出来的点云在转。</b>四路点云拼合 → 去地面 → 掩码 + 聚类 → 圆柱拟合，
-          最终压成策略能直接读的 6 个数。
+          <b>四路点云拼起来在转。</b>去地面、按颜色分出目标、拟合圆柱，
+          最后只留下六个数字交给控制环。
         </figcaption>
       </figure>
       <figure>
         <img src="./img/mvision-failure.png" width="664" height="240"
-             alt="失败案例：估计值落到干扰物上" loading="lazy" />
+             alt="失败案例：估计值落到了相邻的干扰物上" loading="lazy" />
         <figcaption>
-          <b>失败案例也放上来。</b>白圈是真值、黄十字是估计值，这次落到了相邻的干扰物上，
-          该 episode 误差 118 mm——无语义后端在 4 个干扰物下的典型崩法。
+          <b>失败也放上来看。</b>白圈是真值、黄十字是估计值，这次落到了旁边的干扰物上，
+          误差 118 mm——干扰物一多、又不用语义，就会这样崩。
         </figcaption>
       </figure>
     </div>
   </section>
 
-  <section id="layout">
-    <h2>03 · 结构</h2>
-    <h3>四类目录，四条规矩</h3>
+  <section id="inside">
+    <h2>03 · 组成</h2>
+    <h3>一个工作区，三类东西</h3>
     <p class="muted">
-      克隆之后只有我们自己的东西；别人 6 GB 的资产、19 MB 的模型、4 个上游仓库，全靠 <code>fetch.py</code> 复原。
+      感知管线、评测基准、机器人本体栈放在同一个屋檐下，因为它们本来就互相需要：
+      视觉要在仿真里被量化，仿真管线要在真基准上被检验。
     </p>
-    <div class="code"><button class="copy" data-target="tree">复制</button>
-<pre id="tree"><code class="tree">spin-physics-ai/
-├── <b>LICENSE</b>              Apache-2.0（末尾附第三方许可汇总）
-├── <b>README.md</b>            工作区地图 / 约定 / 速查
-├── <b>AGENTS.md</b>            给 AI 助手和协作者的硬规则（禁改目录、网络兜底）
-├── <b>scripts/</b>             ＜入库＞
-│   ├── fetch.py              第三方源码 / 权重 / 数据 / 镜像（钉 commit + sha256）
-│   ├── run_liberoplus.sh     进 conda 环境跑任意命令（渲染变量已设好）
-│   ├── smoke_test.py         单任务自检：建环境 → reset → step → 渲染
-│   ├── smoke_test_categories.py   7 个扰动维度各渲一张
-│   └── demo_video.py         脚本化 pick-and-place（录 MP4 / 开真窗口）
-├── <b>microduck-vision/</b>    ＜入库＞ 我们自己的感知项目（mvision）
-├── <b>docs/</b>                ＜入库＞ 设计文档、安装与踩坑记录
-├── <b>site/</b>                ＜入库＞ 本页（单文件 HTML + 图，推 main 自动部署 Pages）
-├── robots/                ＜不入库＞ 上游机器人源码，fetch.py 复原
-├── benchmarks/LIBERO-plus/ ＜不入库＞ 上游基准仓库
-└── data/                  ＜不入库＞ 6.4 GB 资产与数据集</code></pre></div>
     <table>
-      <thead><tr><th>目录</th><th>是什么</th><th>入库</th><th>规矩</th></tr></thead>
+      <thead><tr><th>组件</th><th>给你什么</th><th>你怎么用</th></tr></thead>
       <tbody>
-        <tr><td><code>benchmarks/</code></td><td>别人的基准仓库，要能跟上游</td><td class="no">否</td><td>只做兼容性改动（运行时精确替换，幂等）</td></tr>
-        <tr><td><code>robots/</code></td><td>别人的机器人源码，只读 + 被 import</td><td class="no">否</td><td>固定 commit 复原；要改就写在覆盖层</td></tr>
-        <tr><td>顶层项目目录</td><td>我们自己的代码</td><td class="yes">是</td><td>产物写 <code>/data</code> 或 <code>data/</code></td></tr>
-        <tr><td><code>data/</code></td><td>数据集、压缩包、采集结果</td><td class="no">否</td><td>写明重下命令，永不 git add</td></tr>
+        <tr><td><code>microduck-vision</code></td><td>可复用的 RGB-D → 六元组感知管线，带误差表与失败案例</td><td>作为库 import，接进自己的控制环</td></tr>
+        <tr><td><code>LIBERO-plus</code></td><td>10,030 个扰动任务与 7 维评测协议</td><td>拿它给你的策略打分、做鲁棒性对比</td></tr>
+        <tr><td><code>MicroDuck</code></td><td>双足机器鸭的模型、训练栈、预训练策略、浏览器 viewer</td><td>改行为、训新策略，或只是看它走两步</td></tr>
+        <tr><td><code>site/</code></td><td>你现在看的这一页</td><td>—</td></tr>
       </tbody>
     </table>
+    <div class="code"><button class="copy" data-target="tree">复制</button>
+<pre id="tree"><code class="tree">spin-physics-ai/
+├── <b>microduck-vision/</b>   感知管线（mvision）：四视角 RGB-D → 位置 / 主轴 / 直立度 / 顶高
+├── <b>benchmarks/</b>         鲁棒性基准（LIBERO-plus）：10,030 个扰动任务
+├── <b>robots/</b>             机器人本体栈（MicroDuck）：模型、训练、预训练策略
+├── <b>scripts/</b>            一键复原、自检、演示
+├── <b>docs/</b>               设计文档与安装说明
+└── <b>site/</b>               本页</code></pre></div>
     <p class="caption">
-      为什么不用 git submodule：受限网络下 <code>git clone</code> 常年不通，submodule 会直接卡死整次 clone；
-      而且上游是 4 个仓库叠加 6.4 GB 数据，子模块反而更难控。
+      上万个任务、6.4 GB 场景资产和十几个预训练权重都不随仓库走：
+      首次运行自动下载并校验，之后完全离线。
     </p>
   </section>
 
-  <section id="quickstart">
-    <h2>04 · 快速开始</h2>
-    <h3>克隆 → 复原 → 自检</h3>
-    <div class="code"><button class="copy" data-target="qs1">复制</button>
-<pre id="qs1"><code>git clone https://github.com/spin-ai/spin-physics-ai.git &amp;&amp; cd spin-physics-ai
-
-./scripts/fetch.py          # 第三方源码 + 权重 + 基准 + 6.4 GB 资产 + 镜像
-./scripts/fetch.py verify   # 只校验（加 --deep 连 6.4 GB sha256 也重算）</code></pre></div>
-
-    <p class="small muted" style="margin-top:22px">看一下 ROS-free 的那部分能不能跑（不需要 GPU、不需要容器）：</p>
-    <div class="code"><button class="copy" data-target="qs2">复制</button>
-<pre id="qs2"><code>cd microduck-vision
+  <section id="start">
+    <h2>04 · 上手</h2>
+    <h3>三步，五分钟</h3>
+    <div class="steps">
+      <div class="step">
+        <h4>装上</h4>
+        <div class="code"><button class="copy" data-target="qs0">复制</button>
+<pre id="qs0"><code>git clone https://github.com/spin-ai/spin-physics-ai.git &amp;&amp; cd spin-physics-ai
+./scripts/fetch.py          # 首次运行：拉齐基准、机器人栈、预训练权重与场景资产</code></pre></div>
+      </div>
+      <div class="step">
+        <h4>先确认它能跑</h4>
+        <div class="code"><button class="copy" data-target="qs1">复制</button>
+<pre id="qs1"><code>cd microduck-vision
 pip install -e ".[dev]"
-pytest                       # 9 passed, 3 skipped（需要 MOSS 资产的用例自动 skip）</code></pre></div>
-
-    <p class="small muted" style="margin-top:22px">让基准里的机械臂动起来（macOS/Linux，MuJoCo 离屏渲染）：</p>
-    <div class="code"><button class="copy" data-target="qs3">复制</button>
-<pre id="qs3"><code>./scripts/run_liberoplus.sh python scripts/smoke_test.py             # 建环境 + 渲染一张
-./scripts/run_liberoplus.sh python scripts/smoke_test_categories.py  # 7 个扰动维度各一张
-./scripts/run_liberoplus.sh python scripts/demo_video.py --live      # 开真窗口看它抓放</code></pre></div>
+pytest                       # 纯几何部分不需要 GPU、不需要机器人资产</code></pre></div>
+      </div>
+      <div class="step">
+        <h4>让它动起来</h4>
+        <div class="code"><button class="copy" data-target="qs2">复制</button>
+<pre id="qs2"><code>./scripts/run_liberoplus.sh python scripts/demo_video.py --live   # 真 3D 窗口，实时看抓放
+./scripts/run_liberoplus.sh python scripts/smoke_test_categories.py  # 七个扰动维度各出图</code></pre></div>
+      </div>
+    </div>
   </section>
 
-  <section id="results">
-    <h2>05 · 实测</h2>
-    <h3>用真实渲染的照片替换「几何替身」，误差有多大</h3>
+  <section id="numbers">
+    <h2>05 · 指标</h2>
+    <h3>用真实照片做感知，误差有多大</h3>
     <p class="muted">
-      20 个随机场景，4 个视角（3 个前视 + 1 个腕部），osmesa 真实渲染。
-      验收线是位置 median 10 mm / p95 25 mm；三个后端全部通过。
+      20 个随机场景、4 个视角、真实渲染。验收线是位置中位 10 mm、P95 25 mm——三个语义后端全部通过。
     </p>
     <table>
       <thead>
-        <tr><th>语义后端</th><th class="num">位置 median / p95</th><th class="num">主轴 median</th><th class="num">顶高 median</th><th class="num">检出率</th><th class="num">端到端 median</th></tr>
+        <tr><th>语义方式</th><th class="num">位置 中位 / P95</th><th class="num">主轴 中位</th><th class="num">顶高 中位</th><th class="num">检出率</th><th class="num">端到端 中位</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>oracle</code>（真值掩码，上限）</td><td class="num">2.1 / 5.6 mm</td><td class="num">3.0°</td><td class="num">1.7 mm</td><td class="num">100%</td><td class="num">1.07 s</td></tr>
-        <tr><td><code>color</code>（品红阈值，零训练零联网）</td><td class="num"><strong>0.5 / 5.6 mm</strong></td><td class="num">3.4°</td><td class="num">1.0 mm</td><td class="num">100%</td><td class="num">1.01 s</td></tr>
-        <tr><td><code>none</code>（无语义，取最大簇）</td><td class="num">3.7 / 10.2 mm</td><td class="num">3.0°</td><td class="num">1.2 mm</td><td class="num">100%</td><td class="num">1.17 s</td></tr>
+        <tr><td>真值掩码（性能上限）</td><td class="num">2.1 / 5.6 mm</td><td class="num">3.0°</td><td class="num">1.7 mm</td><td class="num">100%</td><td class="num">1.07 s</td></tr>
+        <tr><td>颜色阈值（默认，零训练）</td><td class="num"><strong>0.5 / 5.6 mm</strong></td><td class="num">3.4°</td><td class="num">1.0 mm</td><td class="num">100%</td><td class="num">1.01 s</td></tr>
+        <tr><td>无语义（取最大簇）</td><td class="num">3.7 / 10.2 mm</td><td class="num">3.0°</td><td class="num">1.2 mm</td><td class="num">100%</td><td class="num">1.17 s</td></tr>
       </tbody>
     </table>
     <p class="caption">
-      <code>color ≈ oracle</code> 说明瓶颈在几何不在语义。把干扰物加到 4 个后，无语义的
-      <code>none</code> 崩到 p95 <strong>114.8 mm</strong>，<code>color</code> 仍稳在 0.4 / 5.4 mm——
-      这是「为什么需要语义层」的定量证据。
+      默认后端已经贴到性能上限，说明瓶颈在几何重建而不在语义识别。
+      把干扰物加到 4 个，无语义方案掉到 P95 <strong>114.8 mm</strong>，而颜色阈值稳在 0.4 / 5.4 mm——
+      这就是为什么需要一个语义层。
     </p>
   </section>
 
   <section id="license">
     <h2>06 · 许可与引用</h2>
-    <h3>我们的代码 Apache-2.0，别人的东西不进这个仓库</h3>
-    <table>
-      <thead><tr><th>组件</th><th>入库</th><th>许可</th></tr></thead>
-      <tbody>
-        <tr><td>本仓库代码与文档</td><td class="yes">是</td><td>Apache-2.0</td></tr>
-        <tr><td>microduck-lab / microduck / microduck_rl / microduck-docker</td><td class="no">否</td><td>Apache-2.0</td></tr>
-        <tr><td>microduck-policies（10 个 ONNX）</td><td class="no">否</td><td>Apache-2.0</td></tr>
-        <tr><td>LIBERO-plus（上游 GitHub 仓库）</td><td class="no">否</td><td>上游未声明许可（只下载，不复制）</td></tr>
-        <tr><td>LIBERO-plus assets（HF dataset）</td><td class="no">否</td><td>MIT</td></tr>
-      </tbody>
-    </table>
+    <h3>Apache-2.0，可以放心用于商用</h3>
+    <p class="muted">
+      我们自己的代码与文档以 Apache-2.0 发布。第三方组件（基准、机器人栈、预训练权重、场景资产）
+      各自保留原许可，随用随取、不打包进仓库。
+    </p>
     <div class="code"><button class="copy" data-target="cite">复制</button>
 <pre id="cite"><code>@misc{spin-physics-ai,
-  title        = {spin-physics-ai: 物理仿真 + 机器人学习工作区},
+  title        = {spin-physics-ai: 具身智能感知与鲁棒性评测工作区},
   author       = {spin-ai},
   year         = {2026},
   howpublished = {\url{https://github.com/spin-ai/spin-physics-ai}}
@@ -386,8 +393,7 @@ pytest                       # 9 passed, 3 skipped（需要 MOSS 资产的用例
     <span>© 2026 spin-ai · Apache-2.0</span>
     <a href="https://github.com/spin-ai/spin-physics-ai">GitHub</a>
     <a href="https://github.com/spin-ai/spin-physics-ai/blob/main/docs/MICRODUCK_VISION_RD.md">设计文档</a>
-    <a href="https://github.com/spin-ai/spin-physics-ai/blob/main/docs/LIBERO_PLUS_SETUP.md">安装与踩坑</a>
-    <span class="muted">本页由 GitHub Pages 托管，源文件在 <code>site/index.html</code></span>
+    <a href="https://github.com/spin-ai/spin-physics-ai/blob/main/docs/LIBERO_PLUS_SETUP.md">安装说明</a>
   </div>
 </footer>
 
