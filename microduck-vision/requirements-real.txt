@@ -1,0 +1,11 @@
+# 真实照片那一路（mvision/real.py + tools/export_real.py）额外需要的包。
+# 注意三条实测出来的约束：
+#   1. torchvision 必须卸掉：它是给 torch 2.15 编的二进制，torch 2.9.1 下
+#      一 import 就报 "operator torchvision::nms does not exist"，transformers 连带挂掉。
+#   2. transformers 钉在 4.46.3：再高会强升 torch，破坏 microduck_local 的 torch==2.9.1。
+#   3. 权重走 hf-mirror（HF 直连超时）：
+#        HF_ENDPOINT=https://hf-mirror.com huggingface-cli download \
+#          depth-anything/Depth-Anything-V2-Small-hf --local-dir /data/models/dav2s
+transformers==4.46.3
+timm
+opencv-python-headless

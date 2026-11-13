@@ -90,8 +90,75 @@ LIBERO = dict(
     repo="sylvestf/LIBERO-plus",
     commit="4976dc30028e805ff8094b55501d532c48fec182",
     dest="benchmarks/LIBERO-plus",
-    patch="scripts/patches/libero-plus-compat.patch",   # 本地兼容性补丁（torch/Py3.10）
 )
+
+# --------------------------------------------------------------------------
+# LIBERO-plus 本地兼容性改动（替代原来的 .patch 文件）
+#
+# 上游仓库**没有声明许可证**（GitHub 上 license=None），所以本仓库不复制、
+# 不分发它的源码：不存 diff（diff 的上下文行就是它的代码），只在这里保存
+# 「一行原文 -> 一行新文」的映射，clone 后在本地对文件做精确字符串替换。
+# 幂等：新文已在位就跳过，可以反复跑。
+# --------------------------------------------------------------------------
+
+_TORCH_LOAD_OLD = "        init_states = torch.load(init_states_path)\n"
+_TORCH_LOAD_NEW = "        init_states = torch.load(init_states_path, weights_only=False)\n"
+
+#: get_task_init_states() 里原代码只在带 _table_/_tb_/_light_/_add_/_level 后缀时
+#: 才会给 init_states_path 赋值，plain 任务（如 libero_90 原始任务）会 UnboundLocalError。
+_PLAIN_INIT_ANCHOR = (
+    '                if "_add_" in self.tasks[i].init_states_file or "_level" in self.tasks[i].init_states_file:\n'
+    "                    init_states_path = os.path.join(\n"
+    '                        get_libero_path("init_states"),\n'
+    '                        "libero_newobj",\n'
+    "                        self.tasks[i].problem_folder,\n"
+    "                        self.tasks[i].init_states_file,\n"
+    "                    )\n"
+)
+_PLAIN_INIT_NEW = _PLAIN_INIT_ANCHOR + (
+    "\n"
+    "                if not any(\n"
+    "                    tag in self.tasks[i].init_states_file\n"
+    '                    for tag in ("_table_", "_tb_", "_light_", "_add_", "_level")\n'
+    "                ):\n"
+    "                    # plain (non-perturbed) task, e.g. the original LIBERO suites\n"
+    "                    init_states_path = os.path.join(\n"
+    '                        get_libero_path("init_states"),\n'
+    "                        self.tasks[i].problem_folder,\n"
+    "                        self.tasks[i].init_states_file,\n"
+    "                    )\n"
+)
+
+COMPAT_EDITS = [
+    dict(
+        file="libero/libero/benchmark/__init__.py",
+        old=_TORCH_LOAD_OLD,
+        new=_TORCH_LOAD_NEW,
+        expect=2,
+        why="torch>=2.6 默认 weights_only=True，加载 *.init / *.pruned_init 会失败",
+    ),
+    dict(
+        file="libero/libero/benchmark/__init__.py",
+        old=_PLAIN_INIT_ANCHOR,
+        new=_PLAIN_INIT_NEW,
+        expect=1,
+        why="plain 任务（无扰后缀）会 UnboundLocalError，补 init_states 路径兼底",
+    ),
+    dict(
+        file="libero/lifelong/metric.py",
+        old=_TORCH_LOAD_OLD,
+        new=_TORCH_LOAD_NEW,
+        expect=1,
+        why="同上（评测脚本里的 torch.load）",
+    ),
+    dict(
+        file="libero/lifelong/evaluate.py",
+        old=_TORCH_LOAD_OLD,
+        new=_TORCH_LOAD_NEW,
+        expect=1,
+        why="同上（评测脚本里的 torch.load）",
+    ),
+]
 
 POLICIES = dict(
     repo="pollen-robotics/microduck-policies",
@@ -272,6 +339,37 @@ def do_policies() -> bool:
     return ok
 
 
+def apply_libero_compat(dest: Path) -> bool:
+    """对 LIBERO-plus 固定 commit 的源码做精确字符串替换（幂等）。
+
+    不用 git apply / patch：上游未声明许可证，本仓库不分发它的源码片段
+    （diff 的上下文行也算）。只保存「一行原文 -> 一行新文」的映射。
+    上游若改了这几处，会告警而不是默默跳过。
+    """
+    ok = True
+    for e in COMPAT_EDITS:
+        p = dest / e["file"]
+        if not p.exists():
+            warn(f"兼容改动跳过（文件不存在）: {e['file']}")
+            ok = False
+            continue
+        text = p.read_text()
+        if e["new"] in text:
+            continue                                  # 已在位
+        n = text.count(e["old"])
+        if n == 0:
+            warn(f"兼容改动目标未找到（上游可能已变）: {e['file']} — {e['why']}")
+            ok = False
+            continue
+        if n != e["expect"]:
+            warn(f"{e['file']}: 预期 {e['expect']} 处命中，实际 {n} 处，按全部替换处理")
+        p.write_text(text.replace(e["old"], e["new"]))
+        say(f"兼容改动已应用: {e['file']} — {e['why']}")
+    if ok:
+        say("LIBERO-plus 兼容改动 ✓ 全部在位")
+    return ok
+
+
 def do_libero() -> bool:
     spec = dict(name="LIBERO-plus", repo=LIBERO["repo"], commit=LIBERO["commit"],
                 dest=LIBERO["dest"], sentinel={})
@@ -279,20 +377,7 @@ def do_libero() -> bool:
         return False
 
     dest = ROOT / LIBERO["dest"]
-    patch = ROOT / LIBERO["patch"]
-    if patch.exists():
-        if (dest / ".git").exists():
-            if run(["git", "-C", str(dest), "apply", "--check", str(patch)]).returncode == 0:
-                say("应用兼容补丁 (torch weights_only / Py3.10)")
-                run(["git", "-C", str(dest), "apply", str(patch)])
-            else:
-                say("兼容补丁已在位（跳过）")
-        elif run(["patch", "-p1", "--forward", "--dry-run", "-i", str(patch)],
-                 cwd=str(dest)).returncode == 0:
-            say("应用兼容补丁（tarball 快照，用 patch）")
-            run(["patch", "-p1", "--forward", "-i", str(patch)], cwd=str(dest))
-        else:
-            warn("补丁状态未知，见 docs/LIBERO_PLUS_SETUP.md 手工核对")
+    apply_libero_compat(dest)
 
     # 大文件 + 解压
     p = ROOT / LIERO_ASSETS["dest"]
@@ -363,6 +448,14 @@ def do_verify(deep: bool = False) -> bool:
     lr = ROOT / LIBERO["dest"]
     if not (lr / ".git").exists() and not (lr / ".FETCHED_FROM").exists():
         warn("LIBERO-plus: 未拉取（benchmarks/LIBERO-plus 不存在）")
+    else:
+        missing = [e["file"] for e in COMPAT_EDITS
+                   if (lr / e["file"]).exists() and e["new"] not in (lr / e["file"]).read_text()]
+        if missing:
+            fail(f"LIBERO-plus 兼容改动未应用: {missing}")
+            ok = False
+        else:
+            say(f"LIBERO-plus 兼容改动 ✓ {len(COMPAT_EDITS)} 项")
     ap_zip = ROOT / LIERO_ASSETS["dest"]
     if ap_zip.exists():
         if ap_zip.stat().st_size != LIERO_ASSETS["size"]:

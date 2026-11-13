@@ -13,15 +13,30 @@
 
 ```bash
 conda activate liberoplus        # python 3.10.22
-./run_liberoplus.sh <cmd>        # 自带 MAGICK_HOME / MUJOCO_GL 环境变量
 ```
+
+入口脚本（入库，路径无关）：
+
+```bash
+./scripts/run_liberoplus.sh <cmd>        # 自带 MAGICK_HOME / MUJOCO_GL / PYTHONPATH
+./scripts/run_liberoplus.sh bash         # 进一个准备好的 shell
+source scripts/run_liberoplus.sh         # 或者 source 进当前 shell（只设环境变量）
+```
+
+> 上游是 src 布局（`libero/libero/...`），`pip install -e .` 在这里不会产生 import 映射，
+> 所以 `run_liberoplus.sh` 直接把 `$LIBERO_PLUS_DIR` 加进 `PYTHONPATH`；`scripts/*.py`
+> 也自己 `sys.path.insert`。换目录位置只需 `LIBERO_PLUS_DIR=/path/to/LIBERO-plus`。
 
 版本：mujoco 2.3.7 · robosuite 1.4.0 · numpy 1.22.4 · torch 2.14.1 · robomimic 0.2.0 · bddl 1.0.1
 
-## 安装过程中对上游做的小修补（仅兼容性问题）
+## 安装过程中对上游做的小改动（仅兼容性问题）
+
+**不再用 `.patch` 文件**：上游仓库没有声明许可证，本仓库不复制、不分发它的源码（diff 的上下文行也算）。
+改动改为 `scripts/fetch.py` 里的 `COMPAT_EDITS`（「一行原文 → 一行新文」，幂等），
+由 `apply_libero_compat()` 在本地对固定 commit 的文件做精确替换；`./scripts/fetch.py verify` 会检查是否在位。
 
 1. `torch.load(..., weights_only=False)`：torch ≥ 2.6 默认 `weights_only=True`，无法加载
-   `*.pruned_init` / `*.init`。已改 `libero/libero/benchmark/__init__.py`、`libero/lifelong/{metric,evaluate}.py`。
+   `*.pruned_init` / `*.init`。涉及 `libero/libero/benchmark/__init__.py`（2 处）、`libero/lifelong/{metric,evaluate}.py`。
 2. `Benchmark.get_task_init_states()` 落不到分支会 `UnboundLocalError`（影响 `libero_90`），
    已补 plain 任务（无 `_table_/_tb_/_light_/_add_/_level` 后缀）的路径兜底。
 3. robosuite/robomimic 用 `--no-deps` 安装（`egl_probe` 需要 CMake 且只在 Linux 有意义）。
@@ -33,11 +48,13 @@ conda activate liberoplus        # python 3.10.22
 ## 试跑
 
 ```bash
-./run_liberoplus.sh python smoke_test.py            # 单任务：建环境/重置/step/渲染
-./run_liberoplus.sh python smoke_test_categories.py # 7 个扰动维度各渲一张，拼成 grid
+./scripts/run_liberoplus.sh python scripts/smoke_test.py             # 单任务：建环境/重置/step/渲染
+./scripts/run_liberoplus.sh python scripts/smoke_test_categories.py  # 7 个扰动维度各渲一张，拼成 grid
+./scripts/run_liberoplus.sh python scripts/demo_video.py --live      # 脚本化 pick-and-place，开真窗口
 ```
 
-输出：`outputs/smoke_agentview.png`、`outputs/smoke_wrist.png`、`outputs/categories_grid.png`
+输出（`benchmarks/LIBERO-plus/outputs/`，该目录不入库）：`smoke_agentview.png`、`smoke_wrist.png`、
+`categories_grid.png`、`demo_pick.mp4`。
 
 已验证可用：
 

@@ -10,7 +10,7 @@
 
 | 路径 | 归属 | 能不能改 |
 |---|---|---|
-| `benchmarks/LIBERO-plus/` | 上游 benchmark（有 `.git`） | 只做**兼容性**补丁，且必须记进 `docs/LIBERO_PLUS_SETUP.md`；不要重构、不要格式化全文件 |
+| `benchmarks/LIBERO-plus/` | 上游 benchmark（有 `.git`） | 上游**未声明许可证**：不要往本仓库里复制它的代码或 .patch（diff 的上下文行也算）。兼容性改动只能写成 `fetch.py` 的 `COMPAT_EDITS`（原文→新文，幂等），并记进 `docs/LIBERO_PLUS_SETUP.md`；不要重构、不要格式化全文件 |
 | `robots/microduck/microduck-lab/microduck/` | Pollen 上游（vendored 快照） | ❌ 只读。要改行为就写 `microduck-vision/` 里的覆盖层 |
 | `robots/microduck/microduck-lab/microduck_rl/` | Pollen 上游 MJCF + 官方 CUDA 训练栈 | ❌ 只读（它是仿真模型的唯一来源） |
 | `robots/microduck/microduck-lab/` 其余 | 上游 microduck-lab（训练 + viewer） | ⚠️ 默认只读；确需改先在这里开分支并记录 diff 理由 |
@@ -55,6 +55,9 @@ docker pull docker.1panel.live/<image>:<tag> && docker tag docker.1panel.live/<i
 - `data/libero-plus/assets.zip` 6.4 GB：sha256 已钉在 `scripts/fetch.py`（与 HF LFS oid 一致），已解压到
   `benchmarks/LIBERO-plus/libero/libero/assets`，**验证后可删**（`./scripts/fetch.py libero` 会重下）。
 - 训练产物（`runs/`、`captures/`）留在容器 `/data`（volume `microduck-data`）或 `data/`，不进 git。
+- 报告目录 `microduck-vision/reports/`（HTML / 图 / 3D 数据 / GIF）**整目录不入库**，
+  由 `tools/export_figures.py`、`tools/export_3d.py`、`tools/export_real.py` 生成；
+  文档里引用 `reports/...` 的路径只是本地相对路径，克隆后需要先跑生成命令。
 - `~/.libero/config.yaml` 指向 `benchmarks/LIBERO-plus/...`。**再移动这个目录必须同步改它。**
 
 ## 5. 改了版本怎么同步
@@ -66,9 +69,10 @@ docker pull docker.1panel.live/<image>:<tag> && docker tag docker.1panel.live/<i
 ## 6. 提交前自查
 
 ```bash
-git status --short                         # robots/ benchmarks/ data/ 不应出现
+git status --short                         # robots/ benchmarks/ data/ reports/ 不应出现
 find . -type f -size +5M -not -path './.git/*' -not -path './data/*' \
   -not -path './robots/*' -not -path './benchmarks/*'   # 应为空
-./scripts/fetch.py verify                  # 复原链路自检
+./scripts/fetch.py verify                  # 复原链路 + LIBERO 兼容改动自检
 du -sh .                                  # 入库部分应 < 200 KB
+(cd microduck-vision && pytest -q)         # 裸克隆也要绿（需要环境的用例自动 skip）
 ```

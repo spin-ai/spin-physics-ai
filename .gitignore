@@ -9,9 +9,7 @@
 *.onnx
 runs/
 captures/
-reports/*.png
-reports/*.gif
-reports/*.mp4
+reports/
 
 # ── Python / Node ──
 .venv/

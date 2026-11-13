@@ -1,8 +1,6 @@
 data/
 captures/
-reports/*.png
-reports/*.gif
-reports/*.mp4
+reports/
 __pycache__/
 *.pyc
 .venv/

@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mvision"
+version = "0.1.0"
+description = "MicroDuck 视觉感知：四视角 RGB-D → 三维重建 → 结构化感知（替换仿真里的几何替身检测器）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "spin-physics-ai contributors" }]
+keywords = ["robotics", "perception", "3d-reconstruction", "mujoco", "moss", "microduck"]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# 核心只依赖 numpy：几何是纯 numpy 实现（不引 open3d），深度模型一律走 HTTP，
+# 所以裸装即可 import / 跑测试；渲染相关的 MuJoCo、MOSS 资产由容器提供。
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+# 真实照片那一路（mvision/real.py + tools/export_real.py）用，见 requirements-real.txt
+real = [
+  "transformers==4.46.3",   # 再高会强升 torch，破坏 microduck_local 的 torch==2.9.1
+  "timm",
+  "opencv-python-headless",
+]
+dev = ["pytest>=7", "ruff>=0.5"]
+
+[project.scripts]
+mvision = "mvision.cli:main"
+
+[project.urls]
+Documentation = "https://github.com/<owner>/spin-physics-ai/blob/main/docs/MICRODUCK_VISION_RD.md"
+
+[tool.setuptools]
+packages = ["mvision"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

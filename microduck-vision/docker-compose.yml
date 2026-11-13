@@ -13,6 +13,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # 网络抖时改成 0：跳过构建期下载，运行期回落到 /data/moss
+        FETCH_MOSS: "${FETCH_MOSS:-1}"
     image: microduck-vision:local
     container_name: microduck
     ports:
@@ -25,6 +28,8 @@ services:
     environment:
       # 空格分隔；容器内 `ls /app/policies` 可看全部 10 个
       DUCKS: "BEST_alpha_walking BEST_alpha_stand"
+      # 构建时烤进镜像的 MOSS 资产（119 文件 / 20 MB；不是 /data 下，卷会盖掉）
+      MICRODUCK_MOSS_DIR: /opt/moss
     restart: unless-stopped
     stop_grace_period: 20s      # 上游要求：让训练/录制收尾
 
