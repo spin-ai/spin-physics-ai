@@ -34,7 +34,9 @@ dev = ["pytest>=7", "ruff>=0.5"]
 mvision = "mvision.cli:main"
 
 [project.urls]
-Documentation = "https://github.com/<owner>/spin-physics-ai/blob/main/docs/MICRODUCK_VISION_RD.md"
+Homepage = "https://github.com/spin-ai/spin-physics-ai"
+Documentation = "https://github.com/spin-ai/spin-physics-ai/blob/main/docs/MICRODUCK_VISION_RD.md"
+Repository = "https://github.com/spin-ai/spin-physics-ai"
 
 [tool.setuptools]
 packages = ["mvision"]

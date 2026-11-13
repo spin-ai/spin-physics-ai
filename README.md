@@ -42,7 +42,7 @@ spin-physics-ai/
 本仓库只存**我们自己的东西**（文档、`microduck-vision/`、`scripts/`）。克隆到一个新机器后：
 
 ```bash
-git clone <this-repo> spin-physics-ai && cd spin-physics-ai
+git clone https://github.com/spin-ai/spin-physics-ai.git && cd spin-physics-ai
 ./scripts/fetch.py              # 全部：第三方源码 + 权重 + 基准 + 4 GB 数据 + 镜像
 ./scripts/fetch.py verify       # 只校验（默认只查 size，6.4 GB 重算加 --deep）
 ```
