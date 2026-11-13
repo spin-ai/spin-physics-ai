@@ -2,6 +2,8 @@
 
 物理仿真 + 机器人学习的工作区：上游源码、自己的项目代码、大文件数据和跨项目文档**分开放**。
 
+📄 在线介绍页：<https://spin-ai.github.io/spin-physics-ai/>（源文件 `site/index.html`，推 main 自动部署）
+
 ```
 spin-physics-ai/
 ├── README.md              ← 你在这里（工作区地图 / 约定 / 速查）
