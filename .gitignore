@@ -11,6 +11,9 @@ runs/
 captures/
 reports/
 
+# ── 文章草稿（图片依赖本地产物 reports/，不入库；发到外部平台时单独传图）──
+docs/ZHIHU_EMBODIED_3D.md
+
 # ── Python / Node ──
 .venv/
 __pycache__/
