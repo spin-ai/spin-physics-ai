@@ -93,6 +93,17 @@
   .no { color: var(--muted); }
   .caption { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
 
+  figure { margin: 22px 0 6px; }
+  figure img, figure video {
+    display: block; width: 100%; height: auto; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--code-bg);
+  }
+  figcaption { font-size: 13.5px; color: var(--muted); margin-top: 9px; }
+  figcaption b { color: var(--fg); font-weight: 600; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .two figure { margin: 0; }
+  .hero-imgs { margin-top: 34px; }
+
   .code { position: relative; margin: 16px 0; }
   .code .copy {
     position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 4px 9px; border-radius: 7px;
@@ -121,6 +132,7 @@
     <span class="brand">spin-physics-ai</span>
     <nav>
       <a href="#projects">项目</a>
+      <a href="#shots">现场</a>
       <a href="#layout">结构</a>
       <a href="#quickstart">快速开始</a>
       <a href="#results">实测</a>
@@ -139,7 +151,7 @@
     <p class="lede">
       上游源码、我们自己的代码、几 GB 的数据和跨项目文档<strong>分开放</strong>：
       第三方与大数据不进 git，由 <code>scripts/fetch.py</code> 按固定 commit / sha256 复原。
-      克隆下来只有 39 个文件、364 KB，跑一条命令就是完整环境。
+      克隆下来只有几十个文件、不到 3 MB，跑一条命令就是完整环境。
     </p>
     <div class="badges">
       <span class="badge">Apache-2.0</span>
@@ -192,8 +204,76 @@
     </div>
   </section>
 
+  <section id="shots">
+    <h2>02 · 运行现场</h2>
+    <h3>真的跑出来的图，不是示意图</h3>
+    <p class="muted">下面每一张都是本仓库脚本在 MuJoCo 里渲染出来的，对应命令写在图注里。</p>
+
+    <figure>
+      <img src="./img/libero-perturbations.jpg" width="1024" height="512"
+           alt="LIBERO-plus 七个扰动维度的渲染对比" loading="lazy" />
+      <figcaption>
+        <b>同一个任务的 7 个扰动维度。</b>
+        背景纹理（桌布）· 机器人初始位姿 · 相机视角 · 语言改写（图上文字不变、指令已换）·
+        传感器噪声（模糊）· 物体布局（多出干扰物）· 光照条件（变暗）。
+        生成：<code>./scripts/run_liberoplus.sh python scripts/smoke_test_categories.py</code>
+      </figcaption>
+    </figure>
+
+    <figure>
+      <video src="./img/libero-demo.mp4" width="640" height="256"
+             autoplay muted loop playsinline preload="metadata"
+             aria-label="脚本化 pick-and-place 演示"></video>
+      <figcaption>
+        <b>脚本化 pick-and-place，18 秒。</b>
+        左：第三人称视角；右：腕部相机。末端执行器 P 控制：移到汤罐头上方 → 下降 → 合爪 →
+        抬起 → 移到篮子上方 → 松爪 → 退回，任务判定 <code>success=True</code>。
+        生成：<code>./scripts/run_liberoplus.sh python scripts/demo_video.py</code>
+        （<code>--live</code> 则开一个真 3D 窗口实时看）
+      </figcaption>
+    </figure>
+
+    <div class="two" style="margin-top:26px">
+      <figure>
+        <img src="./img/mvision-topview.png" width="1520" height="940"
+             alt="四个拍摄位置的俯视布局与点云" loading="lazy" />
+        <figcaption>
+          <b>四个拍摄位置。</b>虚线是底盘 home 位姿轮廓，彩色虚线是各自视线——
+          每一路只贡献自己看得见的一面，背面靠基线补。
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="./img/mvision-photo.png" width="480" height="342"
+             alt="前视相机渲染出的照片" loading="lazy" />
+        <figcaption>
+          <b>真实渲染出来的一张照片。</b>感知的输入就是这四张 RGB-D，
+          不是仿真状态——这正是这个项目存在的理由。
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="two" style="margin-top:14px">
+      <figure>
+        <img src="./img/mvision-pointcloud.gif" width="570" height="283"
+             alt="四视角点云旋转动画" loading="lazy" />
+        <figcaption>
+          <b>重建出来的点云在转。</b>四路点云拼合 → 去地面 → 掩码 + 聚类 → 圆柱拟合，
+          最终压成策略能直接读的 6 个数。
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="./img/mvision-failure.png" width="664" height="240"
+             alt="失败案例：估计值落到干扰物上" loading="lazy" />
+        <figcaption>
+          <b>失败案例也放上来。</b>白圈是真值、黄十字是估计值，这次落到了相邻的干扰物上，
+          该 episode 误差 118 mm——无语义后端在 4 个干扰物下的典型崩法。
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
   <section id="layout">
-    <h2>02 · 结构</h2>
+    <h2>03 · 结构</h2>
     <h3>四类目录，四条规矩</h3>
     <p class="muted">
       克隆之后只有我们自己的东西；别人 6 GB 的资产、19 MB 的模型、4 个上游仓库，全靠 <code>fetch.py</code> 复原。
@@ -211,6 +291,7 @@
 │   └── demo_video.py         脚本化 pick-and-place（录 MP4 / 开真窗口）
 ├── <b>microduck-vision/</b>    ＜入库＞ 我们自己的感知项目（mvision）
 ├── <b>docs/</b>                ＜入库＞ 设计文档、安装与踩坑记录
+├── <b>site/</b>                ＜入库＞ 本页（单文件 HTML + 图，推 main 自动部署 Pages）
 ├── robots/                ＜不入库＞ 上游机器人源码，fetch.py 复原
 ├── benchmarks/LIBERO-plus/ ＜不入库＞ 上游基准仓库
 └── data/                  ＜不入库＞ 6.4 GB 资产与数据集</code></pre></div>
@@ -230,7 +311,7 @@
   </section>
 
   <section id="quickstart">
-    <h2>03 · 快速开始</h2>
+    <h2>04 · 快速开始</h2>
     <h3>克隆 → 复原 → 自检</h3>
     <div class="code"><button class="copy" data-target="qs1">复制</button>
 <pre id="qs1"><code>git clone https://github.com/spin-ai/spin-physics-ai.git &amp;&amp; cd spin-physics-ai
@@ -252,7 +333,7 @@ pytest                       # 9 passed, 3 skipped（需要 MOSS 资产的用例
   </section>
 
   <section id="results">
-    <h2>04 · 实测</h2>
+    <h2>05 · 实测</h2>
     <h3>用真实渲染的照片替换「几何替身」，误差有多大</h3>
     <p class="muted">
       20 个随机场景，4 个视角（3 个前视 + 1 个腕部），osmesa 真实渲染。
@@ -276,7 +357,7 @@ pytest                       # 9 passed, 3 skipped（需要 MOSS 资产的用例
   </section>
 
   <section id="license">
-    <h2>05 · 许可与引用</h2>
+    <h2>06 · 许可与引用</h2>
     <h3>我们的代码 Apache-2.0，别人的东西不进这个仓库</h3>
     <table>
       <thead><tr><th>组件</th><th>入库</th><th>许可</th></tr></thead>
